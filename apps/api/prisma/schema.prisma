@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  name        String?
+  enrollments Enrollment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("users")
+}
+
+model Course {
+  id              String       @id @default(uuid())
+  title           String
+  description     String?
+  price           Decimal      @db.Decimal(10, 2)
+  availableSlots  Int         // Vagas disponíveis
+  sortOrder       Int          @unique // Ordem do curso (1, 2, 3...)
+  enrollments     Enrollment[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id        String           @id @default(uuid())
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  course    Course           @relation(fields: [courseId], references: [id])
+  courseId  String
+  status    EnrollmentStatus @default(ENROLLED) // Status da inscrição
+  enrolledAt DateTime        @default(now())
+  completedAt DateTime?
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  COMPLETED
+}
